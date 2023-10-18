@@ -5,6 +5,7 @@ using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
 using Tweetbook.Contracts.V1.Responses;
 using Tweetbook.Domain;
+using Tweetbook.Extensions;
 using Tweetbook.Services;
 
 namespace Tweetbook.Controllers.V1
@@ -44,7 +45,10 @@ namespace Tweetbook.Controllers.V1
             // Here we're mapping the request object to the our domain object Post. 
             // This is a common practice to avoid exposing our domain objects to the outside world, and create a nice separation.
             // It also allows us to work with versioning without affecting the outside world.
-            var post = new Post { Name = postRequest.Name };
+            var post = new Post {
+                Name = postRequest.Name,
+                UserId = HttpContext.GetUserId()
+            };
 
             await _postService.CreatePostAsync(post);
 
@@ -60,11 +64,15 @@ namespace Tweetbook.Controllers.V1
         [HttpPut(ApiRoutes.Posts.Update)]
         public async Task<IActionResult> Update([FromRoute]Guid postId, [FromBody] UpdatePostRequest request)
         {
-            var post = new Post
-            { 
-                Id = postId,
-                Name = request.Name
-            };
+            var userOwnsPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+            {
+                return BadRequest(new { error = "You don't own this post." });
+            }
+
+            var post = await _postService.GetPostByIdAsync(postId);
+            post.Name = request.Name;
 
             var updated = await _postService.UpdatePostAsync(post);
 
@@ -79,6 +87,13 @@ namespace Tweetbook.Controllers.V1
         [HttpDelete(ApiRoutes.Posts.Delete)]
         public async Task<IActionResult> Delete([FromRoute]Guid postId)
         {
+            var userOwnsPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+            {
+                return BadRequest(new { error = "You don't own this post." });
+            }
+
             var deleted = await _postService.DeletePostAsync(postId);
 
             if (deleted)
