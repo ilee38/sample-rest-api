@@ -22,7 +22,7 @@ builder.Services.AddControllers();
 
 // Register our DataContext as a service.
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentityCore<IdentityUser>().AddEntityFrameworkStores<DataContext>();
 
 builder.Services.AddScoped<IPostService, PostService>();
@@ -65,7 +65,7 @@ builder.Services.AddSwaggerGen(x =>
     var security = new OpenApiSecurityRequirement();
 
     x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    { 
+    {
         Description = "JWT authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
