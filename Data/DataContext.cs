@@ -16,6 +16,8 @@ namespace Tweetbook.Data
         /// </summary>
         public DbSet<Post> Posts { get; set; }
 
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
 
 
     }

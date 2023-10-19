@@ -32,6 +32,18 @@ builder.Services.AddScoped<IIdentityService, IdentityService>();
 var jwtSettings = new JwtSettings();
 builder.Configuration.Bind(nameof(jwtSettings), jwtSettings);
 builder.Services.AddSingleton(jwtSettings);
+
+var tokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuerSigningKey = true,
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
+    ValidateIssuer = false,
+    ValidateAudience = false,
+    RequireExpirationTime = false,
+    ValidateLifetime = true
+};
+builder.Services.AddSingleton(tokenValidationParameters);
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -41,15 +53,7 @@ builder.Services.AddAuthentication(x =>
 .AddJwtBearer(x =>
 {
     x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        RequireExpirationTime = false,
-        ValidateLifetime = true
-    };
+    x.TokenValidationParameters = tokenValidationParameters;
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
