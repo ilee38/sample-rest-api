@@ -129,6 +129,8 @@ namespace Tweetbook.Services
 
             var refreshToken = new RefreshToken
             {
+                // needed to manually add the Token value here (issue w/ EF core not autogenerating the key)
+                Token = Guid.NewGuid().ToString(),
                 JwtId = token.Id,
                 UserId = user.Id,
                 CreationDate = DateTime.UtcNow,
