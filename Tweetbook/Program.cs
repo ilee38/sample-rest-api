@@ -76,6 +76,14 @@ builder.Services.AddSwaggerGen(x =>
 
 var app = builder.Build();
 
+// Note: this applies DB migrations every time the app is run.
+// This shouldn't be done in PROD environments.
+using(var serviceScope = app.Services.CreateAsyncScope())
+{
+    var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -95,4 +103,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+// Note: see note above about DB migrations at app start. Remove the await and 
+// change to app.Run(); for normal app start when not using the DB migration code above.
+await app.RunAsync();

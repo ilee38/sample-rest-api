@@ -6,7 +6,7 @@ networks:
 
 services:
   main-api:
-    build: /
+    build: ./Tweetbook
     restart: always
     ports:
       - "7000:80"
@@ -23,6 +23,6 @@ services:
       POSTGRES_USER: ilee
       POSTGRES_PASSWORD: my_password
     ports:
-      - "5400:5432"
+      - "5432:5432"
     networks:
       - localdev

@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:7.0-sdk AS build
+FROM mcr.microsoft.com/dotnet/nightly/sdk:7.0 AS build
 
 ARG BUILDCONFIG=RELEASE
 ARG VERSION=1.0.0
@@ -11,7 +11,7 @@ COPY . ./build
 WORKDIR /build/
 RUN dotnet publish ./Tweetbook.csproj -c ${BUILDCONFIG} -o out /p:Version=${VERSION}
 
-FROM microsoft/dotnet:7.0-aspnetcore-runtime
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
 
 COPY --from=build /build/out .
