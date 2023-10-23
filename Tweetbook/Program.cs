@@ -22,7 +22,7 @@ builder.Services.AddControllers();
 
 // Register our DataContext as a service.
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentityCore<IdentityUser>().AddEntityFrameworkStores<DataContext>();
 
 builder.Services.AddScoped<IPostService, PostService>();
@@ -65,7 +65,7 @@ builder.Services.AddSwaggerGen(x =>
     var security = new OpenApiSecurityRequirement();
 
     x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    { 
+    {
         Description = "JWT authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
@@ -75,6 +75,14 @@ builder.Services.AddSwaggerGen(x =>
 });
 
 var app = builder.Build();
+
+// Note: this applies DB migrations every time the app is run.
+// This shouldn't be done in PROD environments.
+using(var serviceScope = app.Services.CreateAsyncScope())
+{
+    var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -88,11 +96,14 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// Removed in order to run and test the app in Docker (otherwhise need to setup certificates for the container, etc.)
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+// Note: see note above about DB migrations at app start. Remove the await and 
+// change to app.Run(); for normal app start when not using the DB migration code above.
+await app.RunAsync();
