@@ -23,6 +23,6 @@ services:
       POSTGRES_USER: ilee
       POSTGRES_PASSWORD: my_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - localdev

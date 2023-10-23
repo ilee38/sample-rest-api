@@ -96,7 +96,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// Removed in order to run and test the app in Docker (otherwhise need to setup certificates for the container, etc.)
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
