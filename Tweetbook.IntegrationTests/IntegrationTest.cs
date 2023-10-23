@@ -19,9 +19,11 @@ namespace Tweetbook.IntegrationTests
 						_postgreSqlContainer = new PostgreSqlBuilder().Build();
 
 						var appFactory = new WebApplicationFactory<Program>()
-								.WithWebHostBuilder(builder =>
+								.WithWebHostBuilder(async builder =>
 								{
-										builder.ConfigureServices(async services =>
+										await InitializeAsync();
+
+										builder.ConfigureServices(services =>
 										{
 												var dbContextDescriptor = services.SingleOrDefault(d =>
 														d.ServiceType == typeof(DbContextOptions<DataContext>));
