@@ -9,7 +9,7 @@ namespace Tweetbook.Services
     /// </summary>
     public class PostService : IPostService
     {
-        private readonly DataContext _dataContext; 
+        private readonly DataContext _dataContext;
 
         public PostService(DataContext dataContext)
         {

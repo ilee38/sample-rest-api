@@ -15,12 +15,12 @@ namespace Tweetbook.Services
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly JwtSettings _jwtSettings;
-        private readonly  TokenValidationParameters _tokenValidationParameters;
+        private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly DataContext _dataContext;
 
         public IdentityService(UserManager<IdentityUser> userManager, JwtSettings jwtSettings, TokenValidationParameters tokenValidationParameters, DataContext dataContext)
         {
-            _userManager = userManager; 
+            _userManager = userManager;
             _jwtSettings = jwtSettings;
             _tokenValidationParameters = tokenValidationParameters;
             _dataContext = dataContext;
@@ -85,7 +85,7 @@ namespace Tweetbook.Services
         private ClaimsPrincipal GetPrincipalFromToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            
+
             try
             {
                 var principal = tokenHandler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
@@ -182,7 +182,7 @@ namespace Tweetbook.Services
             {
                 return new AuthenticationResult { Errors = new[] { "This refresh token has expired." } };
             }
-            
+
             if (storedRefreshToken.Invalidated)
             {
                 return new AuthenticationResult { Errors = new[] { "This refresh token has been invalidated." } };

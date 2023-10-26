@@ -27,7 +27,7 @@ namespace Tweetbook.Controllers.V1
                     Errors = ModelState.Values.SelectMany(x => x.Errors.Select(y => y.ErrorMessage))
                 });
             }
-            
+
             var authResponse = await _identityService.RegisterAsync(request.Email, request.Password);
 
             if (!authResponse.Success)

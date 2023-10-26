@@ -23,6 +23,6 @@ namespace Tweetbook.Domain
 
         [ForeignKey(nameof(UserId))]
         public IdentityUser User { get; set; }
-        
+
     }
 }

@@ -13,11 +13,11 @@ namespace Tweetbook.IntegrationTests
         {
             _postgreSqlContainer = new PostgreSqlBuilder().Build();
         }
-      
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.ConfigureServices(services =>
-				    {
+            {
                 var dbContextDescriptor = services.SingleOrDefault(d =>
                     d.ServiceType == typeof(DbContextOptions<DataContext>));
 
@@ -26,7 +26,7 @@ namespace Tweetbook.IntegrationTests
                     services.Remove(dbContextDescriptor);
                 }
 
-					      var connectionString = _postgreSqlContainer.GetConnectionString();
+                var connectionString = _postgreSqlContainer.GetConnectionString();
                 services.AddDbContext<DataContext>(options =>
                 {
                     options.UseNpgsql(connectionString);
@@ -42,16 +42,16 @@ namespace Tweetbook.IntegrationTests
             });
         }
 
-				public Task InitializeAsync()
-				{
-				  return _postgreSqlContainer.StartAsync();
+        public Task InitializeAsync()
+        {
+            return _postgreSqlContainer.StartAsync();
 
-				}
+        }
 
-				public Task DisposeAsync()
-				{
-				  return _postgreSqlContainer.DisposeAsync().AsTask();
-				}
+        public Task DisposeAsync()
+        {
+            return _postgreSqlContainer.DisposeAsync().AsTask();
+        }
     }
 }
 

@@ -27,14 +27,14 @@ namespace Tweetbook.Controllers.V1
         }
 
         [HttpGet(ApiRoutes.Posts.Get)]
-        public async Task<IActionResult> Get([FromRoute]Guid postId)
+        public async Task<IActionResult> Get([FromRoute] Guid postId)
         {
             var post = await _postService.GetPostByIdAsync(postId);
 
             if (post == null)
             {
                 return NotFound();
-            }   
+            }
 
             return Ok(post);
         }
@@ -42,10 +42,11 @@ namespace Tweetbook.Controllers.V1
         [HttpPost(ApiRoutes.Posts.Create)]
         public async Task<IActionResult> Create([FromBody] CreatePostRequest postRequest)
         {
-            // Here we're mapping the request object to the our domain object Post. 
+            // Here we're mapping the request object to the our domain object Post.
             // This is a common practice to avoid exposing our domain objects to the outside world, and create a nice separation.
             // It also allows us to work with versioning without affecting the outside world.
-            var post = new Post {
+            var post = new Post
+            {
                 Name = postRequest.Name,
                 UserId = HttpContext.GetUserId()
             };
@@ -62,7 +63,7 @@ namespace Tweetbook.Controllers.V1
         }
 
         [HttpPut(ApiRoutes.Posts.Update)]
-        public async Task<IActionResult> Update([FromRoute]Guid postId, [FromBody] UpdatePostRequest request)
+        public async Task<IActionResult> Update([FromRoute] Guid postId, [FromBody] UpdatePostRequest request)
         {
             var userOwnsPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
 
@@ -85,7 +86,7 @@ namespace Tweetbook.Controllers.V1
         }
 
         [HttpDelete(ApiRoutes.Posts.Delete)]
-        public async Task<IActionResult> Delete([FromRoute]Guid postId)
+        public async Task<IActionResult> Delete([FromRoute] Guid postId)
         {
             var userOwnsPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
 
