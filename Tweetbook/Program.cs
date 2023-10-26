@@ -18,7 +18,10 @@ builder.Services.AddControllers();
 // Register our DataContext as a service.
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddIdentityCore<IdentityUser>().AddEntityFrameworkStores<DataContext>();
+
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<DataContext>();
 
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
@@ -79,11 +82,25 @@ var app = builder.Build();
 
 // Note: this applies DB migrations every time the app is run.
 // This shouldn't be done in PROD environments.
-//using(var serviceScope = app.Services.CreateAsyncScope())
-//{
-//    var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
-//    await dbContext.Database.MigrateAsync();
-//}
+using(var serviceScope = app.Services.CreateAsyncScope())
+{
+   var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+   await dbContext.Database.MigrateAsync();
+
+    // TODO: Move role manager and role creation out of here.
+   var roleManager  = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+   if (!await roleManager.RoleExistsAsync("Admin"))
+   {
+        var adminRole = new IdentityRole("Admin");
+        await roleManager.CreateAsync(adminRole);
+   }
+
+   if (!await roleManager.RoleExistsAsync("Poster"))
+   {
+        var posterRole = new IdentityRole("Poster");
+        await roleManager.CreateAsync(posterRole);
+   }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
