@@ -11,19 +11,21 @@ namespace Tweetbook.IntegrationTests
 
 		public static async Task<HttpClient> RegisterClientAsync(this TestAppFactory factory)
 		{
+			var userInfo = new UserRegistrationRequest
+			{
+				Email = $"{Guid.NewGuid()}@integration.com",
+				Password = "SomePass1234!"
+			};
+
 			_client = factory.CreateClient();
-			_client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", await GetJwtAsync());
+			_client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", await GetJwtAsync(userInfo));
 
 			return _client;
 		}
 
-		private static async Task<string> GetJwtAsync()
+		private static async Task<string> GetJwtAsync(UserRegistrationRequest userInfo)
 		{
-			var response = await _client.PostAsJsonAsync(ApiRoutes.Identity.Register, new UserRegistrationRequest
-			{
-				Email = "test1@integration.com",
-				Password = "SomePass1234!"
-			});
+			var response = await _client.PostAsJsonAsync(ApiRoutes.Identity.Register, userInfo);
 
 			var registrationResponse = await response.Content.ReadFromJsonAsync<AuthSuccessResponse>();
 			return registrationResponse.Token;
