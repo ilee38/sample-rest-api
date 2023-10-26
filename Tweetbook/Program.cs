@@ -1,13 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.Swagger;
-using System.Linq.Expressions;
 using System.Text;
 using Tweetbook.Data;
 using Tweetbook.Options;
@@ -62,8 +57,6 @@ builder.Services.AddSwaggerGen(x =>
 {
     x.SwaggerDoc("v1", new OpenApiInfo { Title = "Tweetbook API", Version = "v1" });
 
-    var security = new OpenApiSecurityRequirement();
-
     x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -71,7 +64,15 @@ builder.Services.AddSwaggerGen(x =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey
     });
-    x.AddSecurityRequirement(security);
+
+    x.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {new OpenApiSecurityScheme{Reference = new OpenApiReference
+        {
+            Id = "Bearer",
+            Type = ReferenceType.SecurityScheme
+        }}, new List<string>()}
+    });
 });
 
 var app = builder.Build();
@@ -104,7 +105,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Note: see note above about DB migrations at app start. Remove the await and 
+// Note: see note above about DB migrations at app start. Remove the await and
 // change to app.Run(); for normal app start when not using the DB migration code above.
 await app.RunAsync();
 
