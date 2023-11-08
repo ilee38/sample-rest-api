@@ -18,7 +18,10 @@ namespace Tweetbook.Services
 
         public async Task<bool> CreatePostAsync(Post post)
         {
-            _dataContext.Posts.Add(post);
+            post.Tags?.ForEach(x => x.TagName = x.TagName.ToLower());
+
+            await AddNewTags(post);
+            await _dataContext.Posts.AddAsync(post);
             var created = await _dataContext.SaveChangesAsync();
 
             return created > 0;
@@ -46,7 +49,11 @@ namespace Tweetbook.Services
 
         public async Task<List<Post>> GetPostsAsync()
         {
-            return await _dataContext.Posts.ToListAsync();
+            // First, we need to perform a join between Posts table and PostTags table to get all tags
+            // associated with each post.
+            var queryable = _dataContext.Posts.AsQueryable();
+
+            return await queryable.Include(x => x.Tags).ToListAsync();
         }
 
         public async Task<bool> UpdatePostAsync(Post postToUpdate)
@@ -72,6 +79,37 @@ namespace Tweetbook.Services
             }
 
             return true;
+        }
+
+        public async Task<List<Tag>> GetTagsAsync()
+        {
+            return await _dataContext.Tags.ToListAsync();
+        }
+
+        public async Task<bool> CreateTagAsync(Tag tag)
+        {
+            _dataContext.Tags.Add(tag);
+            var created = await _dataContext.SaveChangesAsync();
+
+            return created > 0;
+        }
+
+        private async Task AddNewTags(Post post)
+        {
+            foreach (var tag in post.Tags)
+            {
+                var exsistingTag = await _dataContext.Tags.SingleOrDefaultAsync(x => x.Name == tag.TagName);
+                if (exsistingTag != null)
+                {
+                    continue;
+                }
+
+                await _dataContext.Tags.AddAsync(new Tag {
+                    Name = tag.TagName,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatorId = post.UserId
+                });
+            }
         }
     }
 }

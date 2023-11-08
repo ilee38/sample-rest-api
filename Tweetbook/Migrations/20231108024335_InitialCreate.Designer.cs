@@ -12,7 +12,7 @@ using Tweetbook.Data;
 namespace Tweetbook.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20231019173223_InitialCreate")]
+    [Migration("20231108024335_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -242,9 +242,25 @@ namespace Tweetbook.Migrations
                     b.ToTable("Posts");
                 });
 
+            modelBuilder.Entity("Tweetbook.Domain.PostTag", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TagName")
+                        .HasColumnType("text");
+
+                    b.HasKey("PostId", "TagName");
+
+                    b.HasIndex("TagName");
+
+                    b.ToTable("PostTags");
+                });
+
             modelBuilder.Entity("Tweetbook.Domain.RefreshToken", b =>
                 {
                     b.Property<string>("Token")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreationDate")
@@ -272,6 +288,25 @@ namespace Tweetbook.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Tweetbook.Domain.Tag", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Name");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -336,6 +371,23 @@ namespace Tweetbook.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Tweetbook.Domain.PostTag", b =>
+                {
+                    b.HasOne("Tweetbook.Domain.Post", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tweetbook.Domain.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("Tweetbook.Domain.RefreshToken", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -345,6 +397,22 @@ namespace Tweetbook.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Tweetbook.Domain.Tag", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Tweetbook.Domain.Post", b =>
+                {
+                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

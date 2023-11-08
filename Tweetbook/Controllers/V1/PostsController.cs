@@ -45,11 +45,26 @@ namespace Tweetbook.Controllers.V1
             // Here we're mapping the request object to the our domain object Post.
             // This is a common practice to avoid exposing our domain objects to the outside world, and create a nice separation.
             // It also allows us to work with versioning without affecting the outside world.
+            var newPostId = Guid.NewGuid();
             var post = new Post
             {
+                Id = newPostId,
                 Name = postRequest.Name,
-                UserId = HttpContext.GetUserId()
+                UserId = HttpContext.GetUserId(),
+                Tags = new List<PostTag>() {}
             };
+
+            if (postRequest.Tags.Count() > 0)
+            {
+                foreach (var tag in postRequest.Tags)
+                {
+                    post.Tags.Add(new PostTag
+                    {
+                        TagName = tag,
+                        PostId = newPostId
+                    });
+                }
+            }
 
             await _postService.CreatePostAsync(post);
 
