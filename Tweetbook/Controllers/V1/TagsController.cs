@@ -23,6 +23,19 @@ namespace Tweetbook.Controllers.V1
          return Ok(await _postService.GetTagsAsync());
       }
 
+      [HttpGet(ApiRoutes.Tags.Get)]
+      public async Task<IActionResult> Get([FromRoute] string tagName)
+      {
+         var tag = await _postService.GetTagByNameAsync(tagName);
+
+         if (tag == null)
+         {
+            return NotFound();
+         }
+
+         return Ok(tag);
+      }
+
       [HttpPost(ApiRoutes.Tags.Create)]
       public async Task<IActionResult> Create([FromBody] CreateTagRequest request)
       {
@@ -46,6 +59,19 @@ namespace Tweetbook.Controllers.V1
             var response = new TagResponse { Name = tag.Name };
 
             return Created(locationUri, response);
+      }
+
+      [HttpDelete(ApiRoutes.Tags.Delete)]
+      public async Task<IActionResult> Delete([FromRoute] string tagName)
+      {
+         var deleted = await _postService.DeleteTagAsync(tagName);
+
+         if (deleted)
+         {
+            return NoContent();
+         }
+
+         return NotFound();
       }
    }
 }

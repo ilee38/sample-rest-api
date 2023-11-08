@@ -44,7 +44,7 @@ namespace Tweetbook.Services
 
         public async Task<Post> GetPostByIdAsync(Guid postId)
         {
-            return await _dataContext.Posts.SingleOrDefaultAsync(x => x.Id == postId);
+            return await _dataContext.Posts.Include(x => x.Tags).SingleOrDefaultAsync(x => x.Id == postId);
         }
 
         public async Task<List<Post>> GetPostsAsync()
@@ -58,6 +58,9 @@ namespace Tweetbook.Services
 
         public async Task<bool> UpdatePostAsync(Post postToUpdate)
         {
+            postToUpdate.Tags?.ForEach(x => x.TagName = x.TagName.ToLower());
+
+            await AddNewTags(postToUpdate);
             _dataContext.Posts.Update(postToUpdate);
             var updated = await _dataContext.SaveChangesAsync();
 
@@ -83,15 +86,43 @@ namespace Tweetbook.Services
 
         public async Task<List<Tag>> GetTagsAsync()
         {
-            return await _dataContext.Tags.ToListAsync();
+            return await _dataContext.Tags.AsNoTracking().ToListAsync();
         }
 
         public async Task<bool> CreateTagAsync(Tag tag)
         {
-            _dataContext.Tags.Add(tag);
+            tag.Name = tag.Name.ToLower();
+            var exsistingTag = await _dataContext.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.Name == tag.Name);
+            if (exsistingTag != null)
+            {
+                return true;
+            }
+
+            await _dataContext.Tags.AddAsync(tag);
             var created = await _dataContext.SaveChangesAsync();
 
             return created > 0;
+        }
+
+        public async Task<Tag> GetTagByNameAsync(string tagName)
+        {
+            return await _dataContext.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.Name == tagName.ToLower());
+        }
+
+        public async Task<bool> DeleteTagAsync(string tagName)
+        {
+            var tag = await _dataContext.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.Name == tagName.ToLower());
+            if (tag == null)
+            {
+                return true;
+            }
+
+            // Need to remove tags from both PostTags and Tags tables.
+            var postTags = await _dataContext.PostTags.Where(x => x.TagName == tagName.ToLower()).ToListAsync();
+            _dataContext.PostTags.RemoveRange(postTags);
+            _dataContext.Tags.Remove(tag);
+
+            return await _dataContext.SaveChangesAsync() > postTags.Count;
         }
 
         private async Task AddNewTags(Post post)
