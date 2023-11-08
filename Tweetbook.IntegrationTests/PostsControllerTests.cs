@@ -23,7 +23,8 @@ namespace Tweetbook.IntegrationTests
 
 			// create post in DB.
 			string postName = "Some test post.";
-			var postResponse = await _client.PostAsJsonAsync(ApiRoutes.Posts.Create, new CreatePostRequest { Name = postName });
+			var tags = new List<string>() { "sometag" };
+			var postResponse = await _client.PostAsJsonAsync(ApiRoutes.Posts.Create, new CreatePostRequest { Name = postName, Tags = tags });
 
 			// Act
 			var response = await _client.GetAsync(ApiRoutes.Posts.GetAll);
@@ -42,7 +43,8 @@ namespace Tweetbook.IntegrationTests
 
 			// create new post in DB.
 			string postName = "Some test post.";
-			var postResponse = await _client.PostAsJsonAsync(ApiRoutes.Posts.Create, new CreatePostRequest { Name = postName });
+			var tags = new List<string>() { "sometag", "anothertag" };
+			var postResponse = await _client.PostAsJsonAsync(ApiRoutes.Posts.Create, new CreatePostRequest { Name = postName, Tags = tags });
       	var createdPost = await postResponse.Content.ReadFromJsonAsync<Post>();
 
 			// Act
