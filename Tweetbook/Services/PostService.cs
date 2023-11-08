@@ -18,7 +18,10 @@ namespace Tweetbook.Services
 
         public async Task<bool> CreatePostAsync(Post post)
         {
-            _dataContext.Posts.Add(post);
+            post.Tags?.ForEach(x => x.TagName = x.TagName.ToLower());
+
+            await AddNewTags(post);
+            await _dataContext.Posts.AddAsync(post);
             var created = await _dataContext.SaveChangesAsync();
 
             return created > 0;
@@ -41,16 +44,23 @@ namespace Tweetbook.Services
 
         public async Task<Post> GetPostByIdAsync(Guid postId)
         {
-            return await _dataContext.Posts.SingleOrDefaultAsync(x => x.Id == postId);
+            return await _dataContext.Posts.Include(x => x.Tags).SingleOrDefaultAsync(x => x.Id == postId);
         }
 
         public async Task<List<Post>> GetPostsAsync()
         {
-            return await _dataContext.Posts.ToListAsync();
+            // First, we need to perform a join between Posts table and PostTags table to get all tags
+            // associated with each post.
+            var queryable = _dataContext.Posts.AsQueryable();
+
+            return await queryable.Include(x => x.Tags).ToListAsync();
         }
 
         public async Task<bool> UpdatePostAsync(Post postToUpdate)
         {
+            postToUpdate.Tags?.ForEach(x => x.TagName = x.TagName.ToLower());
+
+            await AddNewTags(postToUpdate);
             _dataContext.Posts.Update(postToUpdate);
             var updated = await _dataContext.SaveChangesAsync();
 
@@ -72,6 +82,65 @@ namespace Tweetbook.Services
             }
 
             return true;
+        }
+
+        public async Task<List<Tag>> GetTagsAsync()
+        {
+            return await _dataContext.Tags.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<bool> CreateTagAsync(Tag tag)
+        {
+            tag.Name = tag.Name.ToLower();
+            var exsistingTag = await _dataContext.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.Name == tag.Name);
+            if (exsistingTag != null)
+            {
+                return true;
+            }
+
+            await _dataContext.Tags.AddAsync(tag);
+            var created = await _dataContext.SaveChangesAsync();
+
+            return created > 0;
+        }
+
+        public async Task<Tag> GetTagByNameAsync(string tagName)
+        {
+            return await _dataContext.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.Name == tagName.ToLower());
+        }
+
+        public async Task<bool> DeleteTagAsync(string tagName)
+        {
+            var tag = await _dataContext.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.Name == tagName.ToLower());
+            if (tag == null)
+            {
+                return true;
+            }
+
+            // Need to remove tags from both PostTags and Tags tables.
+            var postTags = await _dataContext.PostTags.Where(x => x.TagName == tagName.ToLower()).ToListAsync();
+            _dataContext.PostTags.RemoveRange(postTags);
+            _dataContext.Tags.Remove(tag);
+
+            return await _dataContext.SaveChangesAsync() > postTags.Count;
+        }
+
+        private async Task AddNewTags(Post post)
+        {
+            foreach (var tag in post.Tags)
+            {
+                var exsistingTag = await _dataContext.Tags.SingleOrDefaultAsync(x => x.Name == tag.TagName);
+                if (exsistingTag != null)
+                {
+                    continue;
+                }
+
+                await _dataContext.Tags.AddAsync(new Tag {
+                    Name = tag.TagName,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatorId = post.UserId
+                });
+            }
         }
     }
 }
