@@ -5,6 +5,8 @@
 The API includes:
 
 - PostgreSQL database
+- Entity Framework Core
 - Swagger
 - JWT authentication
+- Role-based authorization
 - xUnit integration tests with TestContainers
