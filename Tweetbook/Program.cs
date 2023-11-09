@@ -54,6 +54,8 @@ builder.Services.AddAuthentication(x =>
     x.TokenValidationParameters = tokenValidationParameters;
 });
 
+builder.Services.AddAuthorization();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(x =>
@@ -80,27 +82,27 @@ builder.Services.AddSwaggerGen(x =>
 
 var app = builder.Build();
 
-// Note: this applies DB migrations every time the app is run.
-// This shouldn't be done in PROD environments.
-// using(var serviceScope = app.Services.CreateAsyncScope())
-// {
-//    var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
-//    await dbContext.Database.MigrateAsync();
 
-//     // TODO: Move role manager and role creation out of here.
-//    var roleManager  = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-//    if (!await roleManager.RoleExistsAsync("Admin"))
-//    {
-//         var adminRole = new IdentityRole("Admin");
-//         await roleManager.CreateAsync(adminRole);
-//    }
+using(var serviceScope = app.Services.CreateAsyncScope())
+{
+    //Note: this applies DB migrations every time the app is run.
+    // This shouldn't be done in PROD environments.
+    //var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+    //await dbContext.Database.MigrateAsync();
 
-//    if (!await roleManager.RoleExistsAsync("Poster"))
-//    {
-//         var posterRole = new IdentityRole("Poster");
-//         await roleManager.CreateAsync(posterRole);
-//    }
-// }
+   var roleManager  = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+   if (!await roleManager.RoleExistsAsync("Admin"))
+   {
+        var adminRole = new IdentityRole("Admin");
+        await roleManager.CreateAsync(adminRole);
+   }
+
+   if (!await roleManager.RoleExistsAsync("Poster"))
+   {
+        var posterRole = new IdentityRole("Poster");
+        await roleManager.CreateAsync(posterRole);
+   }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

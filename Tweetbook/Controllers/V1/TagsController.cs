@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
 using Tweetbook.Contracts.V1.Responses;
@@ -8,6 +10,7 @@ using Tweetbook.Services;
 
 namespace Tweetbook.Controllers.V1
 {
+   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Poster")]
    public class TagsController : ControllerBase
    {
       private readonly IPostService _postService;
@@ -61,7 +64,9 @@ namespace Tweetbook.Controllers.V1
             return Created(locationUri, response);
       }
 
+      // Only users with role = Admin can delete tags.
       [HttpDelete(ApiRoutes.Tags.Delete)]
+      [Authorize(Roles = "Admin")]
       public async Task<IActionResult> Delete([FromRoute] string tagName)
       {
          var deleted = await _postService.DeleteTagAsync(tagName);
