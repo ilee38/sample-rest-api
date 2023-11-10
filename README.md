@@ -2,7 +2,7 @@
 
 # Sample RESTful API with ASP.NET Core
 
-The API includes:
+API features:
 
 - PostgreSQL database
 - Entity Framework Core
@@ -10,3 +10,4 @@ The API includes:
 - JWT authentication
 - Role-based authorization
 - xUnit integration tests with TestContainers
+- Automapper
