@@ -23,7 +23,10 @@ namespace Tweetbook.Controllers.V1
       [HttpGet(ApiRoutes.Tags.GetAll)]
       public async Task<IActionResult> GetAll()
       {
-         return Ok(await _postService.GetTagsAsync());
+         var tags = await _postService.GetTagsAsync();
+         var tagResponses = tags.Select(tag => new TagResponse{ Name = tag.Name }).ToList();
+
+         return Ok(tagResponses);
       }
 
       [HttpGet(ApiRoutes.Tags.Get)]
@@ -36,7 +39,8 @@ namespace Tweetbook.Controllers.V1
             return NotFound();
          }
 
-         return Ok(tag);
+         var response = new TagResponse{ Name = tag.Name };
+         return Ok(response);
       }
 
       [HttpPost(ApiRoutes.Tags.Create)]
