@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tweetbook.Contracts.V1;
@@ -14,16 +15,19 @@ namespace Tweetbook.Controllers.V1
    public class TagsController : ControllerBase
    {
       private readonly IPostService _postService;
+      private readonly IMapper _mapper;
 
-      public TagsController(IPostService postService)
+      public TagsController(IPostService postService, IMapper mapper)
       {
          _postService = postService;
+         _mapper = mapper;
       }
 
       [HttpGet(ApiRoutes.Tags.GetAll)]
       public async Task<IActionResult> GetAll()
       {
-         return Ok(await _postService.GetTagsAsync());
+         var tags = await _postService.GetTagsAsync();
+         return Ok(_mapper.Map<List<TagResponse>>(tags));
       }
 
       [HttpGet(ApiRoutes.Tags.Get)]
@@ -36,32 +40,30 @@ namespace Tweetbook.Controllers.V1
             return NotFound();
          }
 
-         return Ok(tag);
+         return Ok(_mapper.Map<TagResponse>(tag));
       }
 
       [HttpPost(ApiRoutes.Tags.Create)]
       public async Task<IActionResult> Create([FromBody] CreateTagRequest request)
       {
-            var tag = new Tag
-            {
-               Name = request.TagName,
-               CreatorId = HttpContext.GetUserId(),
-               CreatedOn = DateTime.UtcNow
-            };
+         var tag = new Tag
+         {
+            Name = request.TagName,
+            CreatorId = HttpContext.GetUserId(),
+            CreatedOn = DateTime.UtcNow
+         };
 
-            var created = await _postService.CreateTagAsync(tag);
+         var created = await _postService.CreateTagAsync(tag);
 
-            if (!created)
-            {
-               return BadRequest(new { error = "Unable to create tag."});
-            }
+         if (!created)
+         {
+            return BadRequest(new { error = "Unable to create tag."});
+         }
 
-            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            var locationUri = baseUrl + "/" + ApiRoutes.Tags.Get.Replace("{tagName}", tag.Name);
+         var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+         var locationUri = baseUrl + "/" + ApiRoutes.Tags.Get.Replace("{tagName}", tag.Name);
 
-            var response = new TagResponse { Name = tag.Name };
-
-            return Created(locationUri, response);
+         return Created(locationUri, _mapper.Map<TagResponse>(tag));
       }
 
       // Only users with role = Admin can delete tags.

@@ -80,8 +80,9 @@ builder.Services.AddSwaggerGen(x =>
     });
 });
 
-var app = builder.Build();
+builder.Services.AddAutoMapper(typeof(Program));
 
+var app = builder.Build();
 
 using(var serviceScope = app.Services.CreateAsyncScope())
 {
