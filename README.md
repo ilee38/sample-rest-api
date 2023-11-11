@@ -11,3 +11,4 @@ API features:
 - Role-based authorization
 - xUnit integration tests with TestContainers
 - Automapper
+- FluentValidation
