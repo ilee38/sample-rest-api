@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -5,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Tweetbook.Data;
+using Tweetbook.Filters;
 using Tweetbook.Options;
 using Tweetbook.Services;
 using SwaggerOptions = Tweetbook.Options.SwaggerOptions;
@@ -13,7 +16,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+    {
+        // Add input validation filters middleware (to be used with FluentValidation).
+        options.Filters.Add<ValidationFilter>();
+    });
 
 // Register our DataContext as a service.
 builder.Services.AddDbContext<DataContext>(options =>
@@ -81,6 +88,7 @@ builder.Services.AddSwaggerGen(x =>
 });
 
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
