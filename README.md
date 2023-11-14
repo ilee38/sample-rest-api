@@ -12,3 +12,4 @@ API features:
 - xUnit integration tests with TestContainers
 - Automapper
 - FluentValidation
+- ApiKey authentication option
