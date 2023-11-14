@@ -8,7 +8,6 @@ using Tweetbook.Contracts.V1.Responses;
 using Tweetbook.Domain;
 using Tweetbook.Extensions;
 using Tweetbook.Services;
-using Tweetbook.Validators;
 
 namespace Tweetbook.Controllers.V1
 {
