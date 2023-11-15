@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Tweetbook.Cache;
 using Tweetbook.Data;
 using Tweetbook.Filters;
 using Tweetbook.Options;
@@ -89,6 +90,16 @@ builder.Services.AddSwaggerGen(x =>
 
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
+
+// Redis cache
+var redisCacheSettings = new RedisCacheSettings();
+builder.Configuration.GetSection(nameof(RedisCacheSettings)).Bind(redisCacheSettings);
+builder.Services.AddSingleton(redisCacheSettings);
+if (redisCacheSettings.Enabled)
+{
+    builder.Services.AddStackExchangeRedisCache(options => options.Configuration = redisCacheSettings.ConnectionString);
+    builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
+}
 
 var app = builder.Build();
 

@@ -13,3 +13,4 @@ API features:
 - Automapper
 - FluentValidation
 - ApiKey authentication option
+- Response caching with Redis cache (need to have a cache running separately)
