@@ -27,7 +27,7 @@ namespace Tweetbook.Controllers.V1
       public async Task<IActionResult> GetAll()
       {
          var tags = await _postService.GetTagsAsync();
-         return Ok(_mapper.Map<List<TagResponse>>(tags));
+         return Ok(new Response<List<TagResponse>>(_mapper.Map<List<TagResponse>>(tags)));
       }
 
       [HttpGet(ApiRoutes.Tags.Get)]
@@ -40,7 +40,7 @@ namespace Tweetbook.Controllers.V1
             return NotFound();
          }
 
-         return Ok(_mapper.Map<TagResponse>(tag));
+         return Ok(new Response<TagResponse>(_mapper.Map<TagResponse>(tag)));
       }
 
       [HttpPost(ApiRoutes.Tags.Create)]
@@ -63,7 +63,7 @@ namespace Tweetbook.Controllers.V1
          var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
          var locationUri = baseUrl + "/" + ApiRoutes.Tags.Get.Replace("{tagName}", tag.Name);
 
-         return Created(locationUri, _mapper.Map<TagResponse>(tag));
+         return Created(locationUri, new Response<TagResponse>(_mapper.Map<TagResponse>(tag)));
       }
 
       // Only users with role = Admin can delete tags.
