@@ -12,6 +12,7 @@ services:
       - "7000:80"
     depends_on:
       - db-server
+      - redis
     networks:
       - localdev
 
@@ -24,5 +25,12 @@ services:
       POSTGRES_PASSWORD: my_password
     ports:
       - "5433:5432"
+    networks:
+      - localdev
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
     networks:
       - localdev
