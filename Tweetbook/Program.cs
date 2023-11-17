@@ -64,6 +64,16 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddAuthorization();
 
+// Add our UriService
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IUriService>(provider =>
+{
+    var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+    var request = accessor.HttpContext.Request;
+    var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), "/");
+    return new UriService(absoluteUri);
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(x =>
@@ -90,15 +100,6 @@ builder.Services.AddSwaggerGen(x =>
 
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
-
-// Add our UriService
-builder.Services.AddSingleton<IUriService>(provider =>
-{
-    var accessor = provider.GetRequiredService<IHttpContextAccessor>();
-    var request = accessor.HttpContext.Request;
-    var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), "/");
-    return new UriService(absoluteUri);
-});
 
 // Redis cache
 var redisCacheSettings = new RedisCacheSettings();
