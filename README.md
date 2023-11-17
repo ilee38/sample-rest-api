@@ -14,3 +14,4 @@ API features:
 - FluentValidation
 - ApiKey authentication option
 - Response caching with Redis cache
+- Response pagination
