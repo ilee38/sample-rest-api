@@ -27,7 +27,7 @@ namespace Tweetbook.Controllers.V1
       public async Task<IActionResult> GetAll()
       {
          var tags = await _postService.GetTagsAsync();
-         return Ok(new Response<List<TagResponse>>(_mapper.Map<List<TagResponse>>(tags)));
+         return Ok(new PagedResponse<TagResponse>(_mapper.Map<List<TagResponse>>(tags)));
       }
 
       [HttpGet(ApiRoutes.Tags.Get)]

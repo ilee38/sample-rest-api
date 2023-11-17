@@ -47,13 +47,19 @@ namespace Tweetbook.Services
             return await _dataContext.Posts.Include(x => x.Tags).SingleOrDefaultAsync(x => x.Id == postId);
         }
 
-        public async Task<List<Post>> GetPostsAsync()
+        public async Task<List<Post>> GetPostsAsync(PaginationFilter paginationFilter = null)
         {
-            // First, we need to perform a join between Posts table and PostTags table to get all tags
-            // associated with each post.
             var queryable = _dataContext.Posts.AsQueryable();
 
-            return await queryable.Include(x => x.Tags).ToListAsync();
+            if (paginationFilter == null)
+            {
+                // First, we need to perform a join between Posts table and PostTags table to get all tags
+                // associated with each post.
+                return await queryable.Include(x => x.Tags).ToListAsync();
+            }
+
+            var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+            return await queryable.Include(x => x.Tags).Skip(skip).Take(paginationFilter.PageSize).ToListAsync();
         }
 
         public async Task<bool> UpdatePostAsync(Post postToUpdate)
