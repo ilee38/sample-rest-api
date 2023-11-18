@@ -19,3 +19,6 @@
 
 ## Docker
 - Make the Dockerfile and docker-compose files work
+
+## Pagination
+- Implement pagination for Tags endpoint

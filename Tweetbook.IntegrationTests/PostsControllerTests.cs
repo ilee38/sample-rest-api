@@ -1,6 +1,7 @@
 using System.Net;
 using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
+using Tweetbook.Contracts.V1.Responses;
 using Tweetbook.Domain;
 
 namespace Tweetbook.IntegrationTests
@@ -28,7 +29,7 @@ namespace Tweetbook.IntegrationTests
 
 			// Act
 			var response = await _client.GetAsync(ApiRoutes.Posts.GetAll);
-			var postsList = await response.Content.ReadFromJsonAsync<List<Post>>();
+			var postsList = (await response.Content.ReadFromJsonAsync<PagedResponse<PostResponse>>()).Data;
 
 			// Assert
 			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -45,16 +46,16 @@ namespace Tweetbook.IntegrationTests
 			string postName = "Some test post.";
 			var tags = new List<string>() { "sometag", "anothertag" };
 			var postResponse = await _client.PostAsJsonAsync(ApiRoutes.Posts.Create, new CreatePostRequest { Name = postName, Tags = tags });
-      	var createdPost = await postResponse.Content.ReadFromJsonAsync<Post>();
+      	var createdPost = (await postResponse.Content.ReadFromJsonAsync<Response<PostResponse>>()).Data;
 
 			// Act
 			var response = await _client.GetAsync(ApiRoutes.Posts.Get.Replace("{postId}", createdPost.Id.ToString()));
-			var returnedPost = await response.Content.ReadFromJsonAsync<Post>();
+			var returnedPost = await response.Content.ReadFromJsonAsync<Response<PostResponse>>();
 
 			// Assert
 			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-			Assert.Equal(createdPost.Id, returnedPost.Id);
-			Assert.Equal(postName, returnedPost.Name);
+			Assert.Equal(createdPost.Id, returnedPost.Data.Id);
+			Assert.Equal(postName, returnedPost.Data.Name);
 		}
 	}
 }
