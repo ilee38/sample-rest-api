@@ -131,8 +131,8 @@ using(var serviceScope = app.Services.CreateAsyncScope())
 {
     //Note: this applies DB migrations every time the app is run.
     // This shouldn't be done in PROD environments.
-    var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
-    await dbContext.Database.MigrateAsync();
+    //var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+    //await dbContext.Database.MigrateAsync();
 
    var roleManager  = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
    if (!await roleManager.RoleExistsAsync("Admin"))
