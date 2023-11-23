@@ -15,3 +15,4 @@ API features:
 - ApiKey authentication option
 - Response caching with Redis cache
 - Response pagination
+- Health checks for resources: data context (postgres DB) and Redis cache

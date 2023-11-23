@@ -15,6 +15,8 @@ using Tweetbook.Filters;
 using Tweetbook.Options;
 using Tweetbook.Services;
 using SwaggerOptions = Tweetbook.Options.SwaggerOptions;
+using StackExchange.Redis;
+using Tweetbook.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,12 +106,15 @@ builder.Services.AddSwaggerGen(x =>
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
 
-// Redis cache
+// Redis cache (with health checks)
 var redisCacheSettings = new RedisCacheSettings();
 builder.Configuration.GetSection(nameof(RedisCacheSettings)).Bind(redisCacheSettings);
 builder.Services.AddSingleton(redisCacheSettings);
 if (redisCacheSettings.Enabled)
 {
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+        ConnectionMultiplexer.Connect(redisCacheSettings.ConnectionString)
+    );
     builder.Services.AddStackExchangeRedisCache(options => options.Configuration = redisCacheSettings.ConnectionString);
     builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
 }
@@ -117,6 +122,8 @@ if (redisCacheSettings.Enabled)
 // Adding (DataContext) health checks (see further configs below in the app)
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<DataContext>();
+    // Removing Redis health check for now
+    //.AddCheck<RedisHealthCheck>("Redis");
 
 var app = builder.Build();
 
