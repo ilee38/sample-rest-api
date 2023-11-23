@@ -22,3 +22,6 @@
 
 ## Pagination
 - Implement pagination for Tags endpoint
+
+## Health Checks
+- Once the Redis cache is created in Docker, activate the Redis health check.

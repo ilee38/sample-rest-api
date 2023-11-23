@@ -1,17 +1,22 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Tweetbook.Cache;
+using System.Text.Json;
+using Tweetbook.Contracts.HealthChecks;
 using Tweetbook.Data;
 using Tweetbook.Filters;
 using Tweetbook.Options;
 using Tweetbook.Services;
 using SwaggerOptions = Tweetbook.Options.SwaggerOptions;
+using StackExchange.Redis;
+using Tweetbook.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,15 +106,24 @@ builder.Services.AddSwaggerGen(x =>
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
 
-// Redis cache
+// Redis cache (with health checks)
 var redisCacheSettings = new RedisCacheSettings();
 builder.Configuration.GetSection(nameof(RedisCacheSettings)).Bind(redisCacheSettings);
 builder.Services.AddSingleton(redisCacheSettings);
 if (redisCacheSettings.Enabled)
 {
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+        ConnectionMultiplexer.Connect(redisCacheSettings.ConnectionString)
+    );
     builder.Services.AddStackExchangeRedisCache(options => options.Configuration = redisCacheSettings.ConnectionString);
     builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
 }
+
+// Adding (DataContext) health checks (see further configs below in the app)
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DataContext>();
+    // Removing Redis health check for now
+    //.AddCheck<RedisHealthCheck>("Redis");
 
 var app = builder.Build();
 
@@ -151,6 +165,29 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Configuring the health check
+app.UseHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var response = new HealthCheckResponse
+        {
+            Status = report.Status.ToString(),
+            Checks = report.Entries.Select(x => new HealthCheck
+            {
+                Component = x.Key,
+                Status = x.Value.Status.ToString(),
+                Description = x.Value.Description
+            }),
+            Duration = report.TotalDuration
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+});
 
 app.MapControllers();
 
