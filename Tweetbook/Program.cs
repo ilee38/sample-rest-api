@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Tweetbook.Cache;
 using System.Text.Json;
 using Tweetbook.Contracts.HealthChecks;
 using Tweetbook.Data;
@@ -66,6 +67,16 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddAuthorization();
 
+// Add our UriService
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IUriService>(provider =>
+{
+    var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+    var request = accessor.HttpContext.Request;
+    var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), "/");
+    return new UriService(absoluteUri);
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(x =>
@@ -92,6 +103,16 @@ builder.Services.AddSwaggerGen(x =>
 
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
+
+// Redis cache
+var redisCacheSettings = new RedisCacheSettings();
+builder.Configuration.GetSection(nameof(RedisCacheSettings)).Bind(redisCacheSettings);
+builder.Services.AddSingleton(redisCacheSettings);
+if (redisCacheSettings.Enabled)
+{
+    builder.Services.AddStackExchangeRedisCache(options => options.Configuration = redisCacheSettings.ConnectionString);
+    builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
+}
 
 // Adding (DataContext) health checks (see further configs below in the app)
 builder.Services.AddHealthChecks()
