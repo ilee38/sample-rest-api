@@ -1,11 +1,14 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
+using Tweetbook.Contracts.HealthChecks;
 using Tweetbook.Data;
 using Tweetbook.Filters;
 using Tweetbook.Options;
@@ -90,14 +93,18 @@ builder.Services.AddSwaggerGen(x =>
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddFluentValidationAutoValidation().AddValidatorsFromAssemblyContaining<Program>();
 
+// Adding (DataContext) health checks (see further configs below in the app)
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DataContext>();
+
 var app = builder.Build();
 
 using(var serviceScope = app.Services.CreateAsyncScope())
 {
     //Note: this applies DB migrations every time the app is run.
     // This shouldn't be done in PROD environments.
-    //var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
-    //await dbContext.Database.MigrateAsync();
+    var dbContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+    await dbContext.Database.MigrateAsync();
 
    var roleManager  = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
    if (!await roleManager.RoleExistsAsync("Admin"))
@@ -130,6 +137,29 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Configuring the health check
+app.UseHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var response = new HealthCheckResponse
+        {
+            Status = report.Status.ToString(),
+            Checks = report.Entries.Select(x => new HealthCheck
+            {
+                Component = x.Key,
+                Status = x.Value.Status.ToString(),
+                Description = x.Value.Description
+            }),
+            Duration = report.TotalDuration
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+});
 
 app.MapControllers();
 
